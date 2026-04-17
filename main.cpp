@@ -232,13 +232,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageW(hComboMode, CB_SETCURSEL, 0, 0);
 
             hBtnStart  = CreateWindowExW(0, L"BUTTON", L"开始打字", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_START, NULL, NULL);
-            hBtnPause  = CreateWindowExW(0, L"BUTTON", L"暂停", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_PAUSE, NULL, NULL);
-            hBtnResume = CreateWindowExW(0, L"BUTTON", L"继续", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_RESUME, NULL, NULL);
-            hBtnReset  = CreateWindowExW(0, L"BUTTON", L"重置", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            hBtnPause  = CreateWindowExW(0, L"BUTTON", L"暂停[F8]", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_PAUSE, NULL, NULL);
+            hBtnResume = CreateWindowExW(0, L"BUTTON", L"继续[F8]", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_RESUME, NULL, NULL);
+            hBtnReset  = CreateWindowExW(0, L"BUTTON", L"重置[F9]", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
 
-            hLblHotkey = CreateWindowExW(0, L"STATIC", L"✨ 强烈推荐：键盘按 [F8] 暂停/继续，[F9] 重置（能完美避免鼠标点击导致目标编辑器丢失焦点）", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            // hLblHotkey = CreateWindowExW(0, L"STATIC", L"✨ 强烈推荐：键盘按 [F8] 暂停/继续，[F9] 重置（能完美避免鼠标点击导致目标编辑器丢失焦点）", WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
 
             CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
+            // 【新增】=========================================
+            // 获取系统现代 UI 字体（支持 ClearType 平滑抗锯齿）
+            NONCLIENTMETRICSW ncm = { sizeof(NONCLIENTMETRICSW) };
+            SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &ncm, 0);
+            HFONT hFont = CreateFontIndirectW(&ncm.lfMessageFont);
+
+            // 遍历并一键将现代字体应用到刚才创建的所有子控件上
+            EnumChildWindows(hwnd, [](HWND child, LPARAM font) -> BOOL {
+                SendMessageW(child, WM_SETFONT, font, TRUE);
+                return TRUE;
+            }, (LPARAM)hFont);
 
             // 【关键新增】绑定打字引擎状态到 UI 层的同步回调
             engine.SetCallbacks(
@@ -468,6 +480,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    SetProcessDPIAware();
     INITCOMMONCONTROLSEX icex;
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC = ICC_TREEVIEW_CLASSES | ICC_STANDARD_CLASSES;

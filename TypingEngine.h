@@ -12,7 +12,7 @@ enum class EngineState { IDLE, COUNTDOWN, TYPING, PAUSED };
 struct FileTask {
     std::string filePath;
     std::string content;
-    void* treeItem; // 【新增】保存目录树的节点句柄，用于自动选中和展开
+    void* treeItem;
 };
 
 class TypingEngine {
@@ -24,7 +24,6 @@ public:
     void SetConfig(int startDelaySec, int intervalMs, InputMode mode);
     void UpdateInterval(int ms);
 
-    // 【新增】设置 UI 联动回调函数
     using FileStartCallback = std::function<void(void*)>;
     using ProgressCallback = std::function<void(size_t)>;
     void SetCallbacks(FileStartCallback onFile, ProgressCallback onProg);
@@ -39,10 +38,10 @@ public:
 private:
     void WorkerThread(std::function<void(int)> onCountdown, std::function<void()> onTypingStart);
 
-    // 【新增】reportProgress 参数，只在打核心代码时高亮，打 vim 命令时不乱高亮
-    void TypeString(const std::string& str, bool reportProgress = false);
+    // 【修改】增加了 forceInterval 参数，用于强制给终端命令降速
+    void TypeString(const std::string& str, bool reportProgress = false, int forceInterval = -1);
+    void SendVKey(WORD vkey, int sleepTime);
 
-    void SendVKey(WORD vkey);
     void ExecuteVimCommand(const std::string& filepath, const std::string& content);
     void ExecuteContinuousCommand(const std::string& filepath, const std::string& content);
 
@@ -56,7 +55,6 @@ private:
 
     size_t currentFileIndex = 0;
 
-    // 回调函数存储
     FileStartCallback onFileStartCb;
     ProgressCallback onProgressCb;
 };
